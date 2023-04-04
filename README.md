@@ -18,4 +18,4 @@
 
 ## References
 
-- [tabout](https://github.com/tamton-aquib/flirt.nvim) [ for resize, move & close function ]
+- [tabout](https://github.com/tamton-aquib/flirt.nvim) [ for the idea itself ]
