@@ -18,4 +18,4 @@
 
 ## References
 
-- [tabout](https://github.com/tamton-aquib/flirt.nvim) [ for the idea itself ]
+- [tabout](https://github.com/albertromkes/tabout) [ for the idea itself ]
