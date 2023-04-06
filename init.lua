@@ -10,7 +10,7 @@ local function predicate()
 end
 
 -- Chars to Tab Out of
-local skipChars = '[%[%]%(%)%{%}%;%:%.%<%>%`%=\'\"]'
+local skipChars = '[%[%]%(%){};:%.<>`=\'\"]'
 
 -- Closing Chars
 local closeChars = {
@@ -33,25 +33,24 @@ command.add(predicate, {
     local next = doc:get_char(l, c)
     local line = doc.lines[l]
 
-    if toSkip(next) and (string.find(doc:get_text(l, 1, l, c), '^%s+$') == nil and c > 1) then
+    if toSkip(next) and (doc:get_text(l, 1, l, c):find('^%s+$') == nil and c > 1) then
       doc:set_selection(l, c+1)
     elseif toSkip(prev) then
-      local text = string.sub(line, c, -1)
+      local text = line:sub(c, -1)
       local new_pos = nil
 
-      local similar = string.find(text, '%'..prev)
-      local close = closeChars[tostring(prev)]
-      local skip = string.find(text, skipChars) or #line
+      local similar = text:find(prev, 1, true)
+      local close = closeChars[prev]
+      local skip = text:find(skipChars) or #line
 
       if similar ~= nil then -- cursor to next similar char
         new_pos = similar - 1
       elseif close ~= nil then -- cursor to closing char or skip current char
-        new_pos = (string.find(text, close) or skip) - 1
+        new_pos = (text:find(close)-1 or skip)
       else
         new_pos = skip -- cursor skips current char or on line end
       end
-
-      doc:set_selection(l,c+new_pos)
+      doc:set_selection(l, c+new_pos)
     else
       command.perform "doc:indent"
     end
