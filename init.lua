@@ -9,49 +9,55 @@ local function predicate()
     and not core.active_view.doc:has_selection(), core.active_view.doc
 end
 
-local skipChars = {
-  '{', '}',
-  '(', ')',
-  '<', '>', 
-  '[', ']',
-  '=', ':',
-  ';', '.',
-  '`', '"',
-  "'",
+-- Chars to Tab Out of
+local skipChars = '[%[%]%(%)%{%}%;%:%.%<%>%`%=\'\"]'
+
+-- Closing Chars
+local closeChars = {
+  ['{'] = '}',
+  ['('] = ')',
+  ['['] = ']',
+  ['\''] = '\'',
+  ["\""] = "\"",
 }
 
 local function toSkip(chr)
-  for _, a in pairs(skipChars) do 
-    if chr == a then return true end 
-  end 
+  return chr:match(skipChars) ~= nil
 end
 
-command.add (predicate, {
+command.add(predicate, {
   ["tabout:main"] = function (doc)
     local l, c = doc:get_selection()
-    
+
     local prev = doc:get_char(l, c-1)
     local next = doc:get_char(l, c)
+    local line = doc.lines[l]
 
-    if toSkip(next) then
+    if toSkip(next) and (string.find(doc:get_text(l, 1, l, c), '^%s+$') == nil and c > 1) then
       doc:set_selection(l, c+1)
-    elseif toSkip(prev) and c <= #doc.lines[l] then 
-      local i = 0
-      while c+i <= #doc.lines[l] do 
-        if toSkip(doc:get_char(l, c+i)) then 
-          doc:set_selection(l, c+i)
-          break
-        elseif c+i == #doc.lines[l] then 
-          doc:set_selection(l, #doc.lines[l])
-        end
-        i = i+1
+    elseif toSkip(prev) then
+      local text = string.sub(line, c, -1)
+      local new_pos = nil
+
+      local similar = string.find(text, '%'..prev)
+      local close = closeChars[tostring(prev)]
+      local skip = string.find(text, skipChars) or #line
+
+      if similar ~= nil then -- cursor to next similar char
+        new_pos = similar - 1
+      elseif close ~= nil then -- cursor to closing char or skip current char
+        new_pos = (string.find(text, close) or skip) - 1
+      else
+        new_pos = skip -- cursor skips current char or on line end
       end
+
+      doc:set_selection(l,c+new_pos)
     else
       command.perform "doc:indent"
     end
-  end,
+  end
 })
 
 keymap.add {
-  ["tab"] = "tabout:main",  
+  ["tab"] = { "tabout:main" }
 }
